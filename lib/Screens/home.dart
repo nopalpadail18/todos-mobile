@@ -5,7 +5,7 @@ import 'package:todo_tugas/auth/login.dart';
 import 'package:radial_button/widget/circle_floating_button.dart';
 import '../url.dart';
 import '../models/todos.dart';
-import 'task_detail.dart'; // Import the TaskDetail screen
+import 'task_detail.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -16,6 +16,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   List<Todo> _todos = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -24,6 +25,9 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _fetchTodos() async {
+    setState(() {
+      _isLoading = true;
+    });
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
@@ -37,9 +41,17 @@ class _HomeState extends State<Home> {
         throw Exception('Token not found');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e')),
-      );
+      if (mounted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$e')),
+          );
+        }
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -48,29 +60,20 @@ class _HomeState extends State<Home> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/logout'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        await prefs.remove('token');
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Logout successful.')),
-          );
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-          );
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Logout failed. Please try again.')),
+      if (token != null) {
+        await http.post(
+          Uri.parse('$baseUrl/logout'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          },
+        );
+      }
+      await prefs.remove('token');
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       }
     } catch (e) {
@@ -82,130 +85,142 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              // Header
-              Row(
-                children: [
-                  // const CircleAvatar(
-                  //   radius: 20,
-                  //   backgroundImage: AssetImage('assets/profile.png'),
-                  // ),
-                  const SizedBox(width: 12),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'My Tasks',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                            'List',
-                            style: TextStyle(
-                              color: Colors.grey,
+    return _isLoading
+        ? const Center(
+            child: CircularProgressIndicator(),
+          )
+        : Scaffold(
+            backgroundColor: Colors.white,
+            body: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    // Header
+                    Row(
+                      children: [
+                        const SizedBox(width: 12),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'My Tasks',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                            Row(
+                              children: [
+                                Text(
+                                  'List',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Icon(Icons.keyboard_arrow_down,
+                                    color: Colors.grey),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.logout),
+                          onPressed: _logout,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Task Categories
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildCategoryChip('Semua Tugas', '65', true),
+                          _buildCategoryChip('Belum Selesai', '12', false),
+                          _buildCategoryChip('Selesai', '', false),
+                          _buildCategoryChip('Chat AI', '', false),
                         ],
                       ),
-                    ],
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.logout),
-                    onPressed: _logout,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+                    ),
+                    const SizedBox(height: 24),
 
-              // Task Categories
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildCategoryChip('Semua Tugas', '65', true),
-                    _buildCategoryChip('Belum Selesai', '12', false),
-                    _buildCategoryChip('Selesai', '', false),
-                    _buildCategoryChip('Chat AI', '', false),
+                    // Task List
+                    Expanded(
+                      child: _todos.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'Tidak ada tugas tersedia',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: _todos.length,
+                              itemBuilder: (context, index) {
+                                final todo = _todos[index];
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            TaskDetail(todo: todo),
+                                      ),
+                                    );
+                                  },
+                                  child: _buildTaskCard(
+                                    title: todo.namaTugas.length > 25
+                                        ? '${todo.namaTugas.substring(0, 25)}...'
+                                        : todo.namaTugas,
+                                    color: Colors.lightBlue.shade50,
+                                    progress: todo.selesai == 1 ? 1 : 0,
+                                    priority: todo.selesai == 1
+                                        ? 'Selesai'
+                                        : 'Belum Selesai',
+                                    priorityColor: todo.selesai == 1
+                                        ? Colors.green
+                                        : Colors.pink.shade100,
+                                    deadline: todo.deadline,
+                                    deskripsi: todo.deskripsi.length > 50
+                                        ? '${todo.deskripsi.substring(0, 50)}...'
+                                        : todo.deskripsi,
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Task List
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _todos.length,
-                  itemBuilder: (context, index) {
-                    final todo = _todos[index];
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TaskDetail(todo: todo),
-                          ),
-                        );
-                      },
-                      child: _buildTaskCard(
-                        title: todo.namaTugas.length > 25
-                            ? '${todo.namaTugas.substring(0, 25)}...'
-                            : todo.namaTugas,
-                        color: Colors.lightBlue.shade50,
-                        progress: todo.selesai == 1 ? 1 : 0,
-                        priority:
-                            todo.selesai == 1 ? 'Selesai' : 'Belum Selesai',
-                        priorityColor: todo.selesai == 1
-                            ? Colors.green
-                            : Colors.pink.shade100,
-                        deadline: todo.deadline,
-                        deskripsi: todo.deskripsi.length > 50
-                            ? '${todo.deskripsi.substring(0, 50)}...'
-                            : todo.deskripsi,
-                      ),
-                    );
+            ),
+            floatingActionButton: CircleFloatingButton.floatingActionButton(
+              items: [
+                FloatingActionButton(
+                  heroTag: 'add_task', // Unique tag
+                  onPressed: () {
+                    // Tambah tugas
                   },
+                  backgroundColor: Colors.blue,
+                  child: const Icon(Icons.add, color: Colors.white),
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: CircleFloatingButton.floatingActionButton(
-        items: [
-          FloatingActionButton(
-            onPressed: () {
-              // Add your onPressed code here!
-            },
-            backgroundColor: primaryColor,
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
-          FloatingActionButton(
-            onPressed: () {
-              // Add your onPressed code here!
-            },
-            backgroundColor: primaryColor,
-            child: const Icon(Icons.rocket, color: Colors.white),
-          ),
-        ],
-        color: primaryColor,
-        icon: Icons.menu,
-        duration: const Duration(milliseconds: 500),
-        curveAnim: Curves.bounceInOut,
-        useOpacity: true,
-      ),
-    );
+                FloatingActionButton(
+                  heroTag: 'other_action', // Unique tag
+                  onPressed: () {
+                    // Aksi lain
+                  },
+                  backgroundColor: Colors.blue,
+                  child: const Icon(Icons.rocket, color: Colors.white),
+                ),
+              ],
+              color: Colors.blue,
+              icon: Icons.menu,
+              duration: const Duration(milliseconds: 500),
+              curveAnim: Curves.bounceInOut,
+              useOpacity: true,
+            ),
+          );
   }
 
   Widget _buildCategoryChip(String label, String count, bool isSelected) {
