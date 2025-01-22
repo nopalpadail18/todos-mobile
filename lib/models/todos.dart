@@ -6,7 +6,7 @@ class Todo {
   final String namaTugas;
   final String deskripsi;
   final String deadline;
-  final int selesai;
+  bool selesai; 
   final int id;
 
   Todo({
@@ -22,7 +22,7 @@ class Todo {
       namaTugas: json['nama_tugas'],
       deskripsi: json['deskripsi'],
       deadline: json['deadline'],
-      selesai: json['selesai'],
+      selesai: json['selesai'] == 1, // Convert int to bool
       id: json['id'],
     );
   }

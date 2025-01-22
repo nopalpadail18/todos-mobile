@@ -1,3 +1,4 @@
+import 'package:elegant_notification/elegant_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -42,11 +43,9 @@ class _HomeState extends State<Home> {
       }
     } catch (e) {
       if (mounted) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$e')),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e')),
+        );
       }
     } finally {
       setState(() {
@@ -73,13 +72,21 @@ class _HomeState extends State<Home> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
+          ),
         );
+        ElegantNotification.success(
+          title: const Text('Logout Berhasil'),
+          description: const Text('Anda telah berhasil keluar.'),
+        ).show(context);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
@@ -198,7 +205,7 @@ class _HomeState extends State<Home> {
             floatingActionButton: CircleFloatingButton.floatingActionButton(
               items: [
                 FloatingActionButton(
-                  heroTag: 'add_task', // Unique tag
+                  heroTag: 'add_task_1', // Unique tag
                   onPressed: () {
                     // Tambah tugas
                   },
@@ -206,7 +213,7 @@ class _HomeState extends State<Home> {
                   child: const Icon(Icons.add, color: Colors.white),
                 ),
                 FloatingActionButton(
-                  heroTag: 'other_action', // Unique tag
+                  heroTag: 'chat_ai_1', // Unique tag
                   onPressed: () {
                     // Aksi lain
                   },

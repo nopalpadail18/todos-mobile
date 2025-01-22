@@ -89,7 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 10),
               TextField(
-                controller: _emailController,
+                controller: _nameController, // Fix the controller
                 decoration: InputDecoration(
                   hintText: 'Contoh: Nama Lengkap Anda',
                   hintStyle: TextStyle(color: Colors.grey[400]),
