@@ -44,18 +44,13 @@ class _TaskDetailState extends State<TaskDetail> {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        if (responseData['success'] == true) {
-          setState(() {
-            widget.todo.selesai = true;
-          });
-          Navigator.pop(context, true);
-          ElegantNotification.success(
-            title: const Text('Success'),
-            description: const Text('Task status updated successfully.'),
-          ).show(context);
-        } else {
-          throw Exception('Failed to update status');
-        }
+        setState(() {
+          widget.todo.selesai = responseData['todo']['selesai'];
+        });
+        ElegantNotification.success(
+          title: const Text('Success'),
+          description: const Text('Task status updated successfully.'),
+        ).show(context);
       } else {
         ElegantNotification.error(
           title: const Text('Error'),
@@ -71,6 +66,7 @@ class _TaskDetailState extends State<TaskDetail> {
       setState(() {
         _isLoading = false;
       });
+      Navigator.pop(context, true);
     }
   }
 

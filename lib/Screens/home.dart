@@ -90,6 +90,19 @@ class _HomeState extends State<Home> {
     }
   }
 
+  Future<void> _navigateToTaskDetail(Todo todo) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TaskDetail(todo: todo),
+      ),
+    );
+
+    if (result == true) {
+      _fetchTodos();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return _isLoading
@@ -168,25 +181,17 @@ class _HomeState extends State<Home> {
                               itemBuilder: (context, index) {
                                 final todo = _todos[index];
                                 return GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            TaskDetail(todo: todo),
-                                      ),
-                                    );
-                                  },
+                                  onTap: () => _navigateToTaskDetail(todo),
                                   child: _buildTaskCard(
                                     title: todo.namaTugas.length > 25
                                         ? '${todo.namaTugas.substring(0, 25)}...'
                                         : todo.namaTugas,
                                     color: Colors.lightBlue.shade50,
-                                    progress: todo.selesai == 1 ? 1 : 0,
-                                    priority: todo.selesai == 1
+                                    progress: todo.selesai == true ? 1.0 : 0.0,
+                                    priority: todo.selesai == true
                                         ? 'Selesai'
                                         : 'Belum Selesai',
-                                    priorityColor: todo.selesai == 1
+                                    priorityColor: todo.selesai == true
                                         ? Colors.green
                                         : Colors.pink.shade100,
                                     deadline: todo.deadline,
@@ -213,7 +218,7 @@ class _HomeState extends State<Home> {
                   child: const Icon(Icons.add, color: Colors.white),
                 ),
                 FloatingActionButton(
-                  heroTag: 'chat_ai_1', // Unique tag
+                  heroTag: 'chat_ai_1',
                   onPressed: () {
                     // Aksi lain
                   },
