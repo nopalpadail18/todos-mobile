@@ -2,6 +2,7 @@ import 'package:elegant_notification/elegant_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:todo_tugas/Screens/input_task.dart';
 import 'package:todo_tugas/auth/login.dart';
 import 'package:radial_button/widget/circle_floating_button.dart';
 import '../url.dart';
@@ -48,9 +49,11 @@ class _HomeState extends State<Home> {
         );
       }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(
+        () {
+          _isLoading = false;
+        },
+      );
     }
   }
 
@@ -210,9 +213,13 @@ class _HomeState extends State<Home> {
             floatingActionButton: CircleFloatingButton.floatingActionButton(
               items: [
                 FloatingActionButton(
-                  heroTag: 'add_task_1', // Unique tag
+                  heroTag: 'add_task_1',
                   onPressed: () {
-                    // Tambah tugas
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const InputTask(),
+                        ));
                   },
                   backgroundColor: Colors.blue,
                   child: const Icon(Icons.add, color: Colors.white),
