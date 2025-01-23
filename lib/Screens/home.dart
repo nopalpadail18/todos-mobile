@@ -325,7 +325,8 @@ class _HomeState extends State<Home> {
                   color: priorityColor,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(priority),
+                child:
+                    Text(priority, style: const TextStyle(color: Colors.white)),
               ),
               const Spacer(),
               const SizedBox(width: 8),

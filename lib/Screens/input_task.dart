@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:elegant_notification/elegant_notification.dart';
+import 'package:todo_tugas/Screens/home.dart';
 import '../url.dart';
 
 class InputTask extends StatefulWidget {
@@ -50,7 +51,12 @@ class _InputTaskState extends State<InputTask> {
           title: const Text('Success'),
           description: const Text('Task created successfully.'),
         ).show(context);
-        Navigator.pop(context, true);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const Home(),
+          ),
+        );
       } else {
         ElegantNotification.error(
           title: const Text('Error'),
@@ -100,7 +106,12 @@ class _InputTaskState extends State<InputTask> {
             color: Colors.white,
           ),
           onPressed: () {
-            Navigator.pop(context, true);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const Home(),
+              ),
+            );
           },
         ),
         backgroundColor: secondaryColor,
